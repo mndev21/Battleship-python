@@ -1,0 +1,2 @@
+# Python version requirement
+python>=3.10
