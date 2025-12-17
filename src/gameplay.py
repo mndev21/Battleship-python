@@ -15,17 +15,12 @@ Board serialization format:
     'M' = miss
 """
 
-from __future__ import annotations
-
 import csv
 import os
 import random
-from typing import List, Tuple, Set, Optional
 
 from src.utils import (
     BOARD_SIZE,
-    Coord,
-    Ship,
     coords_to_str,
     get_adjacent_and_diagonal_cells,
     in_bounds,
@@ -59,27 +54,27 @@ class GameState:
 
     def __init__(
         self,
-        player_ships: List[Ship],
-        bot_ships: List[Ship],
-    ) -> None:
+        player_ships,
+        bot_ships,
+    ):
         self.player_ships = player_ships
         self.bot_ships = bot_ships
 
         self.player_board = self._empty_board()  # player shots on bot
         self.bot_board = self._empty_board()     # bot shots on player
 
-        self._player_hits: Set[Coord] = set()
-        self._bot_hits: Set[Coord] = set()
+        self._player_hits = set()
+        self._bot_hits = set()
 
-        self.turn_number: int = 0
+        self.turn_number = 0
 
         # =========================
         # Bot AI state
         # =========================
-        self.bot_mode: str = BOT_RANDOM
-        self.bot_hit_chain: List[Coord] = []      # consecutive hits on same ship
-        self.bot_candidates: Set[Coord] = set()   # candidate cells to try next
-        self.bot_tried: Set[Coord] = set()         # all bot shots taken
+        self.bot_mode = BOT_RANDOM
+        self.bot_hit_chain = []      # consecutive hits on same ship
+        self.bot_candidates = set()   # candidate cells to try next
+        self.bot_tried = set()         # all bot shots taken
 
     # =========================
     # Construction
@@ -88,21 +83,21 @@ class GameState:
     @classmethod
     def from_fleets(
         cls,
-        player_fleet: List[Ship],
-        bot_fleet: List[Ship],
-    ) -> "GameState":
+        player_fleet,
+        bot_fleet,
+    ):
         """Create a GameState from player and bot fleets."""
         return cls(player_fleet, bot_fleet)
 
     @staticmethod
-    def _empty_board() -> List[List[str]]:
+    def _empty_board():
         return [[UNKNOWN for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
 
     # =========================
     # Player & bot move application
     # =========================
 
-    def apply_player_move(self, coord: Coord) -> Tuple[str, bool]:
+    def apply_player_move(self, coord):
         """Apply a player move against the bot's ships."""
         return self._apply_move(
             coord,
@@ -111,7 +106,7 @@ class GameState:
             self._player_hits,
         )
 
-    def apply_bot_move(self, coord: Coord) -> Tuple[str, bool]:
+    def apply_bot_move(self, coord):
         """Apply a bot move against the player's ships."""
         return self._apply_move(
             coord,
@@ -122,11 +117,11 @@ class GameState:
 
     def _apply_move(
         self,
-        coord: Coord,
-        target_ships: List[Ship],
-        board: List[List[str]],
-        hit_set: Set[Coord],
-    ) -> Tuple[str, bool]:
+        coord,
+        target_ships,
+        board,
+        hit_set,
+    ):
         """
         Core logic for applying a move to a board.
         """
@@ -153,14 +148,14 @@ class GameState:
     # =========================
 
     @staticmethod
-    def _is_ship_destroyed(ship: Ship, hit_set: Set[Coord]) -> bool:
+    def _is_ship_destroyed(ship, hit_set):
         return all(coord in hit_set for coord in ship)
 
     def _mark_surroundings_as_miss(
         self,
-        ship: Ship,
-        board: List[List[str]],
-    ) -> None:
+        ship,
+        board,
+    ):
         for coord in ship:
             for adj in get_adjacent_and_diagonal_cells(coord):
                 r, c = adj
@@ -171,7 +166,7 @@ class GameState:
     # Bot AI logic
     # =========================
 
-    def choose_bot_move(self) -> Coord:
+    def choose_bot_move(self):
         """
         Decide the bot's next move based on AI state.
         """
@@ -186,7 +181,7 @@ class GameState:
 
         return self._choose_random_move()
 
-    def bot_take_turn(self) -> Tuple[Coord, str]:
+    def bot_take_turn(self):
         """
         Bot chooses a move, applies it, and updates AI state.
         Returns (coord, result).
@@ -209,7 +204,7 @@ class GameState:
     # Bot AI state transitions
     # =========================
 
-    def _on_bot_hit(self, coord: Coord) -> None:
+    def _on_bot_hit(self, coord):
         self.bot_hit_chain.append(coord)
 
         if len(self.bot_hit_chain) == 1:
@@ -220,14 +215,14 @@ class GameState:
             self.bot_mode = BOT_LOCKED
             self._lock_axis_and_expand_candidates()
 
-    def _on_bot_miss(self, coord: Coord) -> None:
+    def _on_bot_miss(self, coord):
         self.bot_candidates.discard(coord)
 
         if self.bot_mode == BOT_LOCKED:
             # Remove dead-end direction, keep trying others
             self.bot_candidates.discard(coord)
 
-    def _on_bot_sink(self) -> None:
+    def _on_bot_sink(self):
         self.bot_mode = BOT_RANDOM
         self.bot_hit_chain.clear()
         self.bot_candidates.clear()
@@ -236,7 +231,7 @@ class GameState:
     # Bot AI helpers
     # =========================
 
-    def _choose_random_move(self) -> Coord:
+    def _choose_random_move(self):
         """Pick a random untried cell."""
         all_cells = [
             (r, c)
@@ -246,7 +241,7 @@ class GameState:
         ]
         return random.choice(all_cells)
 
-    def _choose_from_candidates(self) -> Coord:
+    def _choose_from_candidates(self):
         """Choose next move from candidate cells."""
         valid = [
             c for c in self.bot_candidates
@@ -257,7 +252,7 @@ class GameState:
             return self._choose_random_move()
         return random.choice(valid)
 
-    def _choose_locked_move(self) -> Coord:
+    def _choose_locked_move(self):
         """Choose next move along locked axis."""
         valid = [
             c for c in self.bot_candidates
@@ -268,7 +263,7 @@ class GameState:
             return self._choose_random_move()
         return random.choice(valid)
 
-    def _add_adjacent_candidates(self, coord: Coord) -> None:
+    def _add_adjacent_candidates(self, coord):
         """Add orthogonal neighbors as candidates."""
         r, c = coord
         for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
@@ -276,7 +271,7 @@ class GameState:
             if in_bounds((nr, nc)) and (nr, nc) not in self.bot_tried:
                 self.bot_candidates.add((nr, nc))
 
-    def _lock_axis_and_expand_candidates(self) -> None:
+    def _lock_axis_and_expand_candidates(self):
         """
         Lock orientation after second hit and expand candidates
         along that axis only.
@@ -312,11 +307,11 @@ class GameState:
     # =========================
 
     @staticmethod
-    def serialize_board(board: List[List[str]]) -> str:
+    def serialize_board(board):
         return "".join(board[r][c] for r in range(BOARD_SIZE) for c in range(BOARD_SIZE))
 
     @staticmethod
-    def deserialize_board(s: str) -> List[List[str]]:
+    def deserialize_board(s):
         board = GameState._empty_board()
         idx = 0
         for r in range(BOARD_SIZE):
@@ -331,12 +326,12 @@ class GameState:
 
     def log_turn(
         self,
-        csv_path: str,
-        player_move: Coord,
-        player_result: str,
-        bot_move: Coord,
-        bot_result: str,
-    ) -> None:
+        csv_path,
+        player_move,
+        player_result,
+        bot_move,
+        bot_result,
+    ):
         os.makedirs(os.path.dirname(csv_path), exist_ok=True)
         file_exists = os.path.exists(csv_path)
 
@@ -370,13 +365,13 @@ class GameState:
     # Endgame checks
     # =========================
 
-    def all_player_ships_sunk(self) -> bool:
+    def all_player_ships_sunk(self):
         return all(
             self._is_ship_destroyed(ship, self._bot_hits)
             for ship in self.player_ships
         )
 
-    def all_bot_ships_sunk(self) -> bool:
+    def all_bot_ships_sunk(self):
         return all(
             self._is_ship_destroyed(ship, self._player_hits)
             for ship in self.bot_ships

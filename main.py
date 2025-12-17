@@ -12,15 +12,13 @@ This script:
 If data/game_state.csv already exists, it will be overwritten.
 """
 
-from __future__ import annotations
-
 import os
 import sys
 
 from src.ship_input import get_and_save_player_ships
 from src.bot_generation import generate_and_save_bot_ships
 from src.gameplay import GameState
-from src.utils import str_to_coords, Coord
+from src.utils import str_to_coords
 
 
 DATA_DIR = "data"
@@ -32,13 +30,13 @@ GAME_STATE_CSV = os.path.join(DATA_DIR, "game_state.csv")
 # Helper functions
 # =========================
 
-def ensure_directories() -> None:
+def ensure_directories():
     """Ensure required directories exist."""
     os.makedirs(DATA_DIR, exist_ok=True)
     os.makedirs(OUTPUTS_DIR, exist_ok=True)
 
 
-def truncate_game_state_csv() -> None:
+def truncate_game_state_csv():
     """
     Overwrite existing game_state.csv at game start
     to ensure a clean log for each new game.
@@ -48,7 +46,7 @@ def truncate_game_state_csv() -> None:
             pass
 
 
-def prompt_player_move() -> Coord:
+def prompt_player_move():
     """
     Prompt the player for a move and return a Coord.
     Expected format: A1
@@ -64,7 +62,7 @@ def prompt_player_move() -> Coord:
             print("Invalid coordinate. Please use format like A1.")
 
 
-def print_boards(game: GameState) -> None:
+def print_boards(game):
     """
     Print the current state of both boards.
     """
@@ -75,7 +73,7 @@ def print_boards(game: GameState) -> None:
     _print_board(game.bot_board)
 
 
-def _print_board(board: list[list[str]]) -> None:
+def _print_board(board):
     header = "  " + " ".join(str(i + 1) for i in range(len(board)))
     print(header)
     for i, row in enumerate(board):

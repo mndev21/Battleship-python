@@ -9,16 +9,11 @@ This module is responsible for:
 No game logic or bot logic is implemented here.
 """
 
-from __future__ import annotations
-
 import csv
 import os
-from typing import List
 
 from src.utils import (
     SHIP_SIZES,
-    Ship,
-    Coord,
     validate_ship_fleet,
     str_to_coords,
     coords_to_str,
@@ -29,7 +24,7 @@ from src.utils import (
 # Input helpers
 # =========================
 
-def _prompt_ship(size: int, index: int, total: int) -> Ship:
+def _prompt_ship(size, index, total):
     """
     Prompt the user to enter coordinates for a single ship.
 
@@ -62,14 +57,14 @@ def _prompt_ship(size: int, index: int, total: int) -> Ship:
         return ship
 
 
-def _collect_fleet() -> List[Ship]:
+def _collect_fleet():
     """
     Prompt the user to enter all ships according to SHIP_SIZES.
     Returns a list of Ship objects (not yet globally validated).
     """
-    ships: List[Ship] = []
+    ships = []
 
-    size_counts: dict[int, int] = {}
+    size_counts = {}
     for size in SHIP_SIZES:
         size_counts[size] = size_counts.get(size, 0) + 1
 
@@ -85,7 +80,7 @@ def _collect_fleet() -> List[Ship]:
 # CSV helpers
 # =========================
 
-def _save_ships_to_csv(ships: List[Ship], csv_path: str) -> None:
+def _save_ships_to_csv(ships, csv_path):
     """
     Save ships to CSV file.
     One row per ship: ship_id, size, coordinates
@@ -109,8 +104,8 @@ def _save_ships_to_csv(ships: List[Ship], csv_path: str) -> None:
 # =========================
 
 def get_and_save_player_ships(
-    csv_path: str = "data/player_ships.csv",
-) -> List[Ship]:
+    csv_path="data/player_ships.csv",
+):
     """
     Prompt the user to place all ships, validate the fleet,
     save it to CSV, and return the list of ships.
