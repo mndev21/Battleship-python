@@ -1,0 +1,51 @@
+# =========================
+# Python bytecode / cache
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# =========================
+# Virtual environments
+# =========================
+venv/
+.env/
+.venv/
+env/
+
+# =========================
+# Game-generated data
+# =========================
+data/*.csv
+
+# Keep directory structure but ignore contents
+data/.gitkeep
+outputs/.gitkeep
+
+# =========================
+# Logs & temporary files
+# =========================
+*.log
+*.tmp
+*.bak
+*.swp
+
+# =========================
+# OS / Editor files
+# =========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# =========================
+# Python packaging
+# =========================
+dist/
+build/
+*.egg-info/
+
+# =========================
+# Jupyter (if ever used)
+# =========================
+.ipynb_checkpoints/
