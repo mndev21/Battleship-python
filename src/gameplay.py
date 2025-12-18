@@ -376,3 +376,22 @@ class GameState:
             self._is_ship_destroyed(ship, self._player_hits)
             for ship in self.bot_ships
         )
+
+    def ask_player_move(self):
+        """Ask player for a valid move that was not tried before."""
+        while True:
+            raw = input("Enter coordinate to fire (e.g. A5): ").strip().upper()
+            try:
+                coord = coords_to_str(raw)
+            except ValueError:
+                print("Invalid format. Try again (e.g. A5).")
+                continue
+
+            r, c = coord.row, coord.col
+
+            if self.player_board[r][c] != ' ':
+                print(f"You already fired at {raw}. Try another coordinate.")
+                continue
+
+            return coord
+

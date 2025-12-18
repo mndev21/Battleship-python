@@ -46,18 +46,27 @@ def truncate_game_state_csv():
             pass
 
 
-def prompt_player_move():
+def prompt_player_move(game):
     """
     Prompt the player for a move and return a Coord.
-    Expected format: A1
+    Expected format: A1. Checks if the move was already tried.
     """
+    from src.gameplay import UNKNOWN
     while True:
         raw = input("Enter your move (e.g. A1): ").strip()
         try:
             coords = str_to_coords(raw)
             if len(coords) != 1:
                 raise ValueError
-            return coords[0]
+            
+            coord = coords[0]
+            r, c = coord
+            
+            if game.player_board[r][c] != UNKNOWN:
+                print(f"You already fired at {raw}. Try another coordinate.")
+                continue
+                
+            return coord
         except Exception:
             print("Invalid coordinate. Please use format like A1.")
 
@@ -85,7 +94,7 @@ def _print_board(board):
 # Main game loop
 # =========================
 
-def main() -> None:
+def main():
     ensure_directories()
     truncate_game_state_csv()
 
@@ -106,7 +115,7 @@ def main() -> None:
             print_boards(game)
 
             # Player move
-            player_coord = prompt_player_move()
+            player_coord = prompt_player_move(game)
             player_result, _ = game.apply_player_move(player_coord)
 
             if game.all_bot_ships_sunk():
