@@ -18,7 +18,7 @@ import sys
 from src.ship_input import get_and_save_player_ships
 from src.bot_generation import generate_and_save_bot_ships
 from src.gameplay import GameState
-from src.utils import str_to_coords
+from src.utils import str_to_coords, coord_to_str
 
 
 DATA_DIR = "data"
@@ -110,44 +110,43 @@ def main():
 
         print("\nGame start!\n")
 
+        current_turn = "player"
+
         # Gameplay loop
         while True:
             print_boards(game)
 
-            # Player move
-            player_coord = prompt_player_move(game)
-            player_result, _ = game.apply_player_move(player_coord)
+            if current_turn == "player":
+                print("\n--- YOUR TURN ---")
+                player_coord = prompt_player_move(game)
+                player_result, _ = game.apply_player_move(player_coord)
+                
+                print(f"\nYou shoot at {coord_to_str(player_coord)} -> {player_result.upper()}")
 
-            if game.all_bot_ships_sunk():
-                game.log_turn(
-                    GAME_STATE_CSV,
-                    player_coord,
-                    player_result,
-                    player_coord,  # dummy
-                    "n/a",
-                )
-                print_boards(game)
-                print("\nYou win! All bot ships are sunk.")
-                break
+                # Log turn (using dummy bot info if it's player's streak)
+                game.log_turn(GAME_STATE_CSV, player_coord, player_result, (0,0), "n/a")
 
-            # Bot move
-            bot_coord, bot_result = game.bot_take_turn()
+                if game.all_bot_ships_sunk():
+                    print_boards(game)
+                    print("\nYou win! All bot ships are sunk.")
+                    break
 
-            # Log turn
-            game.log_turn(
-                GAME_STATE_CSV,
-                player_coord,
-                player_result,
-                bot_coord,
-                bot_result,
-            )
+                if player_result == "miss":
+                    current_turn = "bot"
+            else:
+                print("\n--- BOT'S TURN ---")
+                bot_coord, bot_result = game.bot_take_turn()
+                print(f"Bot shoots at {coord_to_str(bot_coord)} -> {bot_result.upper()}")
 
-            print(f"\nBot shoots at {bot_coord} -> {bot_result}")
+                # Log turn (using dummy player info if it's bot's streak)
+                game.log_turn(GAME_STATE_CSV, (0,0), "n/a", bot_coord, bot_result)
 
-            if game.all_player_ships_sunk():
-                print_boards(game)
-                print("\nYou lose! All your ships are sunk.")
-                break
+                if game.all_player_ships_sunk():
+                    print("\nYou lose! All your ships are sunk.")
+                    break
+
+                if bot_result == "miss":
+                    current_turn = "player"
 
         print(f"\nGame data saved in '{DATA_DIR}/'.")
 
