@@ -9,38 +9,27 @@ This module contains:
 No user input, file I/O, or random generation is implemented here.
 """
 
-from __future__ import annotations
-
-from typing import List, Tuple, Optional
 
 # =========================
 # Constants
 # =========================
 
-BOARD_SIZE: int = 10
+BOARD_SIZE = 10
 
 # Exact fleet definition (multiset of ship lengths)
-SHIP_SIZES: list[int] = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
-
-# =========================
-# Type aliases
-# =========================
-
-Coord = Tuple[int, int]   # (row, col), both in range [0, 9]
-Ship = List[Coord]        # list of coordinates belonging to one ship
-
+SHIP_SIZES = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
 
 # =========================
 # Coordinate helpers
 # =========================
 
-def in_bounds(coord: Coord) -> bool:
+def in_bounds(coord):
     """Return True if coordinate is within the board."""
     r, c = coord
     return 0 <= r < BOARD_SIZE and 0 <= c < BOARD_SIZE
 
 
-def coord_to_str(coord: Coord) -> str:
+def coord_to_str(coord):
     """
     Convert (row, col) -> 'A1' style string.
     Row 0 -> A, Col 0 -> 1
@@ -49,7 +38,7 @@ def coord_to_str(coord: Coord) -> str:
     return f"{chr(ord('A') + r)}{c + 1}"
 
 
-def str_to_coord(s: str) -> Coord:
+def str_to_coord(s):
     """
     Convert 'A1' style string -> (row, col).
     """
@@ -64,7 +53,7 @@ def str_to_coord(s: str) -> Coord:
     return (r, c)
 
 
-def coords_to_str(ship: Ship) -> str:
+def coords_to_str(ship):
     """
     Convert a ship (list of coordinates) to CSV-friendly string.
     Example: [(0,0),(0,1),(0,2)] -> 'A1,A2,A3'
@@ -72,7 +61,7 @@ def coords_to_str(ship: Ship) -> str:
     return ",".join(coord_to_str(c) for c in ship)
 
 
-def str_to_coords(s: str) -> Ship:
+def str_to_coords(s):
     """
     Convert CSV-friendly ship string to list of coordinates.
     Example: 'A1,A2,A3' -> [(0,0),(0,1),(0,2)]
@@ -86,13 +75,13 @@ def str_to_coords(s: str) -> Ship:
 # Adjacency helpers
 # =========================
 
-def get_adjacent_and_diagonal_cells(coord: Coord) -> list[Coord]:
+def get_adjacent_and_diagonal_cells(coord):
     """
     Return all adjacent cells (8-directional) around coord,
     excluding the coord itself.
     """
     r, c = coord
-    neighbors: list[Coord] = []
+    neighbors = []
 
     for dr in (-1, 0, 1):
         for dc in (-1, 0, 1):
@@ -109,7 +98,7 @@ def get_adjacent_and_diagonal_cells(coord: Coord) -> list[Coord]:
 # Ship validation helpers
 # =========================
 
-def _is_straight_and_consecutive(ship: Ship) -> bool:
+def _is_straight_and_consecutive(ship):
     """
     Check that a ship is either horizontal or vertical
     and consists of consecutive cells without gaps.
@@ -133,12 +122,12 @@ def _is_straight_and_consecutive(ship: Ship) -> bool:
     return False
 
 
-def ships_touch_or_overlap(ships: list[Ship]) -> bool:
+def ships_touch_or_overlap(ships):
     """
     Return True if any ships overlap or touch each other
     (including diagonally).
     """
-    cell_to_ship: dict[Coord, int] = {}
+    cell_to_ship = {}
 
     for idx, ship in enumerate(ships):
         for coord in ship:
@@ -155,7 +144,7 @@ def ships_touch_or_overlap(ships: list[Ship]) -> bool:
     return False
 
 
-def validate_ship_fleet(ships: list[Ship]) -> tuple[bool, Optional[str]]:
+def validate_ship_fleet(ships):
     """
     Validate a full fleet of ships.
 

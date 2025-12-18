@@ -12,15 +12,13 @@ This script:
 If data/game_state.csv already exists, it will be overwritten.
 """
 
-from __future__ import annotations
-
 import os
 import sys
 
 from src.ship_input import get_and_save_player_ships
 from src.bot_generation import generate_and_save_bot_ships
 from src.gameplay import GameState
-from src.utils import str_to_coords, Coord
+from src.utils import str_to_coords, coord_to_str
 
 
 DATA_DIR = "data"
@@ -32,13 +30,13 @@ GAME_STATE_CSV = os.path.join(DATA_DIR, "game_state.csv")
 # Helper functions
 # =========================
 
-def ensure_directories() -> None:
+def ensure_directories():
     """Ensure required directories exist."""
     os.makedirs(DATA_DIR, exist_ok=True)
     os.makedirs(OUTPUTS_DIR, exist_ok=True)
 
 
-def truncate_game_state_csv() -> None:
+def truncate_game_state_csv():
     """
     Overwrite existing game_state.csv at game start
     to ensure a clean log for each new game.
@@ -48,23 +46,32 @@ def truncate_game_state_csv() -> None:
             pass
 
 
-def prompt_player_move() -> Coord:
+def prompt_player_move(game):
     """
     Prompt the player for a move and return a Coord.
-    Expected format: A1
+    Expected format: A1. Checks if the move was already tried.
     """
+    from src.gameplay import UNKNOWN
     while True:
         raw = input("Enter your move (e.g. A1): ").strip()
         try:
             coords = str_to_coords(raw)
             if len(coords) != 1:
                 raise ValueError
-            return coords[0]
+            
+            coord = coords[0]
+            r, c = coord
+            
+            if game.player_board[r][c] != UNKNOWN:
+                print(f"You already fired at {raw}. Try another coordinate.")
+                continue
+                
+            return coord
         except Exception:
             print("Invalid coordinate. Please use format like A1.")
 
 
-def print_boards(game: GameState) -> None:
+def print_boards(game):
     """
     Print the current state of both boards.
     """
@@ -75,7 +82,7 @@ def print_boards(game: GameState) -> None:
     _print_board(game.bot_board)
 
 
-def _print_board(board: list[list[str]]) -> None:
+def _print_board(board):
     header = "  " + " ".join(str(i + 1) for i in range(len(board)))
     print(header)
     for i, row in enumerate(board):
@@ -87,7 +94,7 @@ def _print_board(board: list[list[str]]) -> None:
 # Main game loop
 # =========================
 
-def main() -> None:
+def main():
     ensure_directories()
     truncate_game_state_csv()
 
@@ -103,44 +110,43 @@ def main() -> None:
 
         print("\nGame start!\n")
 
+        current_turn = "player"
+
         # Gameplay loop
         while True:
             print_boards(game)
 
-            # Player move
-            player_coord = prompt_player_move()
-            player_result, _ = game.apply_player_move(player_coord)
+            if current_turn == "player":
+                print("\n--- YOUR TURN ---")
+                player_coord = prompt_player_move(game)
+                player_result, _ = game.apply_player_move(player_coord)
+                
+                print(f"\nYou shoot at {coord_to_str(player_coord)} -> {player_result.upper()}")
 
-            if game.all_bot_ships_sunk():
-                game.log_turn(
-                    GAME_STATE_CSV,
-                    player_coord,
-                    player_result,
-                    player_coord,  # dummy
-                    "n/a",
-                )
-                print_boards(game)
-                print("\nYou win! All bot ships are sunk.")
-                break
+                # Log turn (using dummy bot info if it's player's streak)
+                game.log_turn(GAME_STATE_CSV, player_coord, player_result, (0,0), "n/a")
 
-            # Bot move
-            bot_coord, bot_result = game.bot_take_turn()
+                if game.all_bot_ships_sunk():
+                    print_boards(game)
+                    print("\nYou win! All bot ships are sunk.")
+                    break
 
-            # Log turn
-            game.log_turn(
-                GAME_STATE_CSV,
-                player_coord,
-                player_result,
-                bot_coord,
-                bot_result,
-            )
+                if player_result == "miss":
+                    current_turn = "bot"
+            else:
+                print("\n--- BOT'S TURN ---")
+                bot_coord, bot_result = game.bot_take_turn()
+                print(f"Bot shoots at {coord_to_str(bot_coord)} -> {bot_result.upper()}")
 
-            print(f"\nBot shoots at {bot_coord} -> {bot_result}")
+                # Log turn (using dummy player info if it's bot's streak)
+                game.log_turn(GAME_STATE_CSV, (0,0), "n/a", bot_coord, bot_result)
 
-            if game.all_player_ships_sunk():
-                print_boards(game)
-                print("\nYou lose! All your ships are sunk.")
-                break
+                if game.all_player_ships_sunk():
+                    print("\nYou lose! All your ships are sunk.")
+                    break
+
+                if bot_result == "miss":
+                    current_turn = "player"
 
         print(f"\nGame data saved in '{DATA_DIR}/'.")
 
